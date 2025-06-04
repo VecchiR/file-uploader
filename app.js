@@ -49,4 +49,5 @@ app.set('view engine', 'ejs');
 
 app.use(routes);
 
-app.listen(process.env.PORT, () => console.log('app listening on port: ', process.env.PORT));
+const port = process.env.PORT || 3000;
+app.listen(port, () => console.log('app listening on port: ', port));
