@@ -24,8 +24,11 @@
   <% } %>
 
   <form action="/upload-file" method="POST" enctype="multipart/form-data">
-    <input id="file" name="file" type="file"/> 
-
+    <label for="path">Save files to path:</label>
+    <input id="path" name="path" type="text" placeholder="new = uploads/new/" />
+    
+    <input id="files" name="files" type="file" multiple/> 
+    
     <button type="submit">Upload</button>
   </form>
 </body>

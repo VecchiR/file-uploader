@@ -14,8 +14,15 @@ router.get('/upload-file', requireAuth, (req, res) => {
     res.render('upload-file-form');
 })
 
-router.post('/upload-file', requireAuth, upload.single('file'), (req, res) => {
-    res.redirect('/');
+router.post('/upload-file', requireAuth, (req, res, next) => {
+    upload.array('files', 10)(req, res, function (err) {
+        if (err) {
+            return res.render('upload-file-form', {
+                errors: [{ msg: 'Error uploading files' }]
+            });
+        }
+        res.redirect('/');
+    });
 })
 
 
