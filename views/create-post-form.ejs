@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Create Post</title>
+  <style>
+    .error {
+      color: red;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Create Post</h1>
+
+  <% if (typeof errors !== 'undefined') { %>
+    <div class="error">
+      <% errors.forEach(error => { %>
+        <p><%= error.msg %></p>
+      <% }); %>
+    </div>
+  <% } %>
+
+  <form action="/create-post" method="POST">
+    <label for="title">Post Title</label>
+    <input id="title" name="title" placeholder="Title" type="text" 
+           value="<%= typeof user !== 'undefined' ? user.title : '' %>"/>
+
+    <label for="message">Your Message</label>
+    <input id="message" name="message" placeholder="Type your message here..." type="text"
+           value="<%= typeof user !== 'undefined' ? user.message : '' %>"/>
+
+    <button type="submit">Post Message</button>
+  </form>
+</body>
+</html>
