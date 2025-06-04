@@ -4,6 +4,9 @@ const { requireAuth, redirectIfAuthenticated } = require('../middleware/authMidd
 const { registerValidation } = require('../middleware/userValidation');
 const { userController } = require('../controllers');
 
+const multer  = require('multer');
+const upload = multer({ dest: 'uploads/' });
+
 router.get('/', (req, res) => {
     res.render('home');
 });
@@ -11,6 +14,10 @@ router.get('/', (req, res) => {
 
 router.get('/upload-file', requireAuth, (req, res) => {
     res.render('upload-file-form');
+})
+
+router.post('/upload-file', requireAuth, upload.single('file'), (req, res) => {
+    res.redirect('/');
 })
 
 

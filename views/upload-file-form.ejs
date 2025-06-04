@@ -23,10 +23,8 @@
     </div>
   <% } %>
 
-  <form action="/upload-file" method="POST">
-    <label for="title">Example title Input</label>
-    <input id="title" name="title" placeholder="Title" type="text" 
-           value="<%= typeof user !== 'undefined' ? user.title : '' %>"/>
+  <form action="/upload-file" method="POST" enctype="multipart/form-data">
+    <input id="file" name="file" type="file"/> 
 
     <button type="submit">Upload</button>
   </form>

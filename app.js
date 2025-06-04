@@ -12,6 +12,8 @@ const routes = require('./routes');
 const { addAuthState } = require('./middleware/authMiddleware');
 const flash = require('connect-flash');
 
+
+
 const app = express();
 
 app.use(
