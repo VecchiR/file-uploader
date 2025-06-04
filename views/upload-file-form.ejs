@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Upload File</title>
+  <style>
+    .error {
+      color: red;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Upload File</h1>
+
+  <% if (typeof errors !== 'undefined') { %>
+    <div class="error">
+      <% errors.forEach(error => { %>
+        <p><%= error.msg %></p>
+      <% }); %>
+    </div>
+  <% } %>
+
+  <form action="/upload-file" method="POST">
+    <label for="title">Example title Input</label>
+    <input id="title" name="title" placeholder="Title" type="text" 
+           value="<%= typeof user !== 'undefined' ? user.title : '' %>"/>
+
+    <button type="submit">Upload</button>
+  </form>
+</body>
+</html>

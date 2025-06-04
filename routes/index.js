@@ -8,6 +8,12 @@ router.get('/', (req, res) => {
     res.render('home');
 });
 
+
+router.get('/upload-file', requireAuth, (req, res) => {
+    res.render('upload-file-form');
+})
+
+
 router.get('/login', redirectIfAuthenticated, (req, res) => {
     res.render('login-form', {
         error: req.flash('error')
