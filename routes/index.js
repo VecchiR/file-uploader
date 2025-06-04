@@ -3,9 +3,7 @@ const passport = require('passport');
 const { requireAuth, redirectIfAuthenticated } = require('../middleware/authMiddleware');
 const { registerValidation } = require('../middleware/userValidation');
 const { userController } = require('../controllers');
-
-const multer  = require('multer');
-const upload = multer({ dest: 'uploads/' });
+const { upload } = require('../config/multer');
 
 router.get('/', (req, res) => {
     res.render('home');
