@@ -1,9 +1,7 @@
 const router = require('express').Router();
 const passport = require('passport');
-const { registerValidation } = require('../middleware/userValidation');
 const { requireAuth, redirectIfAuthenticated } = require('../middleware/authMiddleware');
-// const { clubValidation } = require('../middleware/clubValidation');
-// const { postValidation } = require('../middleware/postValidation');
+const { registerValidation } = require('../middleware/userValidation');
 const { userController } = require('../controllers');
 
 router.get('/', (req, res) => {
@@ -36,23 +34,5 @@ router.get('/register', redirectIfAuthenticated, (req, res) => {
 
 router.post('/register', registerValidation, userController.createUser);
 
-
-// router.get('/join-club', redirectMember, requireAuth, (req, res) => {
-//     res.render("join-club");
-// })
-
-// router.post('/join-club', requireAuth, clubValidation, userController.makeMember);
-
-// router.get('/create-post', requireAuth, postController.getPostCreationForm);
-
-// router.post('/create-post', requireAuth, postValidation, postController.createPost);
-
-// router.post("/:postId/delete", requireAuth, requireAdmin, postController.deletePost);
-
-
-// // Admin Panel Routes
-// router.get('/admin-panel', requireAuth, requireAdmin, adminController.getAdminPanel);
-// router.post('/admin-panel/search', requireAuth, requireAdmin, adminController.searchUser);
-// router.post('/admin-panel/update', requireAuth, requireAdmin, adminController.updateUser);
 
 module.exports = router;
