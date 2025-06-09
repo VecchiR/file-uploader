@@ -2,8 +2,7 @@ const router = require('express').Router();
 const passport = require('passport');
 const { requireAuth, redirectIfAuthenticated } = require('../middleware/authMiddleware');
 const { registerValidation } = require('../middleware/userValidation');
-const { userController } = require('../controllers');
-const { upload } = require('../config/multer');
+const { userController, storageController } = require('../controllers');
 
 router.get('/', (req, res) => {
     res.render('home');
@@ -14,16 +13,7 @@ router.get('/storage', requireAuth, (req, res) => {
     res.render('storage');
 })
 
-router.post('/storage', requireAuth, (req, res, next) => {
-    upload.array('files', 10)(req, res, function (err) {
-        if (err) {
-            return res.render('storage', {
-                errors: [{ msg: 'Error uploading files' }]
-            });
-        }
-        res.redirect('/');
-    });
-})
+router.post('/storage', requireAuth, storageController.uploadFiles);
 
 
 router.get('/login', redirectIfAuthenticated, (req, res) => {
