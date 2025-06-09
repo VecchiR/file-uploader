@@ -2,6 +2,7 @@ const { upload } = require('../config/multer');
 const { File } = require('../config/prismaClient');
 const fs = require('fs').promises;
 const path = require('path');
+const { processFileData, cleanupUploadedFiles } = require('../lib/storageUtils');
 
 const uploadFiles = async (req, res, next) => {
     await upload.array('files', 10)(req, res, async (err) => {
@@ -11,16 +12,11 @@ const uploadFiles = async (req, res, next) => {
             });
         }
 
-        console.log('Uploaded files (multer to disk storage):', req.files);
-
         try {
-            // Start transaction for database operations
+            const fileData = await processFileData(req.files, req.user.id);
+
             await File.createMany({
-                data: req.files.map(file => ({
-                    name: file.filename,
-                    ownerId: req.user.id,
-                    parentFolderId: null
-                }))
+                data: fileData
             });
             
             res.redirect('/storage');
@@ -29,20 +25,13 @@ const uploadFiles = async (req, res, next) => {
             console.error('Database error:', error);
             
             // If database operation fails, delete the uploaded files
-            await Promise.all(req.files.map(async file => {
-                const filePath = path.join(__dirname, '../uploads', file.filename);
-                try {
-                    await fs.unlink(filePath);
-                } catch (unlinkError) {
-                    console.error(`Error deleting file ${filePath}:`, unlinkError);
-                }
-            }));
+            await cleanupUploadedFiles(req.files);
 
             return res.render('storage', {
                 errors: [{ msg: 'Error saving file information' }]
             });
         }
-    })
+    });
 }
 
 const listFilesAndFolders = async (req, res) => {
