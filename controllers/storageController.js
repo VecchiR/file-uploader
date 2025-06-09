@@ -45,6 +45,25 @@ const uploadFiles = async (req, res, next) => {
     })
 }
 
+const listFilesAndFolders = async (req, res) => {
+    try {
+        const files = await File.findMany({
+            where: {
+                ownerId: req.user.id,
+                parentFolderId: null
+            }
+        });
+        res.render('storage', { files });
+    } catch (error) {
+        console.error('Error fetching files:', error);
+        res.render('storage', {
+            errors: [{ msg: 'Error fetching files' }]
+        });
+    }
+}
+
+
 module.exports = {
-    uploadFiles
+    uploadFiles,
+    listFilesAndFolders
 }
