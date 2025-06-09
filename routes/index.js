@@ -10,14 +10,14 @@ router.get('/', (req, res) => {
 });
 
 
-router.get('/upload-file', requireAuth, (req, res) => {
-    res.render('upload-file-form');
+router.get('/storage', requireAuth, (req, res) => {
+    res.render('storage');
 })
 
-router.post('/upload-file', requireAuth, (req, res, next) => {
+router.post('/storage', requireAuth, (req, res, next) => {
     upload.array('files', 10)(req, res, function (err) {
         if (err) {
-            return res.render('upload-file-form', {
+            return res.render('storage', {
                 errors: [{ msg: 'Error uploading files' }]
             });
         }

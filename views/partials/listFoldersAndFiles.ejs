@@ -1,0 +1,9 @@
+    <ul>
+        <% folders.forEach((folder)=> { %>
+        <%- include('partials/folder', {folder}); %>
+        <% }); %>
+        
+        <% files.forEach((file)=> { %>
+        <%- include('partials/file', {file}); %>
+        <% }); %>
+    </ul>
