@@ -1,13 +1,24 @@
 const { upload } = require('../config/multer');
-const { File } = require('../config/prismaClient');
-const fs = require('fs').promises;
-const path = require('path');
-const { processFileData, cleanupUploadedFiles } = require('../lib/storageUtils');
+const { File, Folder } = require('../config/prismaClient');
+const { processFileData, cleanupUploadedFiles, getStorageItems } = require('../lib/storageUtils');
+
+const renderStorageView = async (res, options = {}) => {
+    try {
+        const { files, folders } =
+            await getStorageItems(res.locals.currentUser.id);
+        res.render('storage', { files, folders, ...options });
+    } catch (error) {
+        console.error('Error rendering storage view:', error);
+        res.render('storage', {
+            errors: [{ msg: 'Error fetching storage items' }]
+        });
+    }
+};
 
 const uploadFiles = async (req, res, next) => {
     await upload.array('files', 10)(req, res, async (err) => {
         if (err) {
-            return res.render('storage', {
+            return renderStorageView(res, {
                 errors: [{ msg: 'Error uploading files' }]
             });
         }
@@ -18,35 +29,59 @@ const uploadFiles = async (req, res, next) => {
             await File.createMany({
                 data: fileData
             });
-            
+
             res.redirect('/storage');
 
         } catch (error) {
             console.error('Database error:', error);
-            
+
             // If database operation fails, delete the uploaded files
             await cleanupUploadedFiles(req.files);
-
-            return res.render('storage', {
+            return renderStorageView(res, {
                 errors: [{ msg: 'Error saving file information' }]
             });
         }
     });
 }
 
-const listFilesAndFolders = async (req, res) => {
+
+const createFolder = async (req, res) => {
+    const folderName = req.body.folder_name;
+
+    if (!folderName || folderName.trim() === '') {
+        return renderStorageView(res, {
+            errors: [{ msg: 'Folder name cannot be empty' }]
+        });
+    }
+
     try {
-        const files = await File.findMany({
+        const existingFolder = await Folder.findFirst({
             where: {
+                name: folderName,
                 ownerId: req.user.id,
                 parentFolderId: null
             }
         });
-        res.render('storage', { files });
+
+        if (existingFolder) {
+            return renderStorageView(res, {
+                errors: [{ msg: 'Folder already exists' }]
+            });
+        }
+
+        await Folder.create({
+            data: {
+                name: folderName,
+                ownerId: req.user.id,
+                parentFolderId: null
+            }
+        });
+
+        res.redirect('/storage');
     } catch (error) {
-        console.error('Error fetching files:', error);
-        res.render('storage', {
-            errors: [{ msg: 'Error fetching files' }]
+        console.error('Error creating folder:', error);
+        await renderStorageView(res, {
+            errors: [{ msg: 'Error creating folder' }]
         });
     }
 }
@@ -54,5 +89,6 @@ const listFilesAndFolders = async (req, res) => {
 
 module.exports = {
     uploadFiles,
-    listFilesAndFolders
+    createFolder,
+    renderStorageView
 }

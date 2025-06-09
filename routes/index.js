@@ -9,9 +9,12 @@ router.get('/', (req, res) => {
 });
 
 
-router.get('/storage', requireAuth, storageController.listFilesAndFolders);
+router.get('/storage', requireAuth, (req, res) => storageController.renderStorageView(res));
 
 router.post('/storage', requireAuth, storageController.uploadFiles);
+
+router.post('/storage/create-folder', requireAuth, storageController.createFolder);
+
 
 
 router.get('/login', redirectIfAuthenticated, (req, res) => {
