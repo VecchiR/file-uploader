@@ -15,17 +15,48 @@ datasource db {
 }
 
 model User {
-  id         Int    @id @default(autoincrement())
+  id         String @id @default(uuid())
   email      String @unique @db.VarChar(255)
   first_name String @db.VarChar(50)
   last_name  String @db.VarChar(50)
   hash       String @db.VarChar(255)
   salt       String @db.VarChar(255)
+
+  folders Folder[] @relation("UserFolders")
+  files   File[]   @relation("UserFiles")
+
+  createdAt DateTime @default(now())
+}
+
+model Folder {
+  id             String  @id @default(uuid())
+  name           String  @default("New Folder")
+  ownerId        String
+  parentFolderId String?
+
+  owner        User     @relation("UserFolders", fields: [ownerId], references: [id])
+  parentFolder Folder?  @relation("FolderChildren", fields: [parentFolderId], references: [id])
+  children     Folder[] @relation("FolderChildren")
+  files        File[]   @relation("FolderFiles")
+
+  createdAt DateTime @default(now())
+}
+
+model File {
+  id       String  @id @default(uuid())
+  name     String  @default("New File")
+  ownerId  String
+  parentFolderID String? 
+  
+  owner  User    @relation("UserFiles", fields: [ownerId], references: [id])
+  folder Folder? @relation("FolderFiles", fields: [parentFolderID], references: [id])
+
+  createdAt DateTime @default(now())
 }
 
 model Session {
   id        String   @id
   sid       String   @unique
-  data      String   
-  expiresAt   DateTime
+  data      String
+  expiresAt DateTime
 }
