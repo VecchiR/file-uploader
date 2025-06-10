@@ -1,0 +1,92 @@
+<style>
+    .item-container {
+        position: relative;
+    }
+
+    .item-content {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .context-button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1.2em;
+        padding: 5px;
+        color: #666;
+    }
+
+    .context-button:hover {
+        color: #333;
+        background-color: #f0f0f0;
+        border-radius: 50%;
+    }
+
+    .context-menu {
+        display: none;
+        position: absolute;
+        right: 0;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        z-index: 1000;
+    }
+
+    .context-menu.show {
+        display: block;
+    }
+
+    .delete-form {
+        margin: 0;
+    }
+
+    .delete-button {
+        width: 100%;
+        padding: 8px 16px;
+        background: none;
+        border: none;
+        text-align: left;
+        cursor: pointer;
+        color: #dc3545;
+    }
+
+    .delete-button:hover {
+        background-color: #fff5f5;
+    }
+</style>
+
+<script>
+    function toggleContextMenu(id) {
+        // Close all other menus first
+        document.querySelectorAll('.context-menu.show').forEach(menu => {
+            if (menu.id !== id) {
+                menu.classList.remove('show');
+            }
+        });
+
+        // Toggle the clicked menu
+        const menu = document.getElementById(id);
+        menu.classList.toggle('show');
+    }
+
+    // Close context menus when clicking outside
+    document.addEventListener('click', (event) => {
+        if (!event.target.closest('.context-button') && !event.target.closest('.context-menu')) {
+            document.querySelectorAll('.context-menu.show').forEach(menu => {
+                menu.classList.remove('show');
+            });
+        }
+    });
+</script>
+
+<% /* Context Menu Component */ %>
+<%# Usage: include with itemType (file/folder) and item (the file/folder object) %>
+<button class="context-button" onclick="toggleContextMenu('<%= itemType %>-<%= item.id %>')">⋮</button>
+<div id="<%= itemType %>-<%= item.id %>" class="context-menu">
+    <form action="/storage/<%= itemType %>/<%= item.id %>/delete" method="POST" class="delete-form">
+        <button type="submit" class="delete-button">Delete</button>
+    </form>
+</div>

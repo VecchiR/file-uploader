@@ -1,9 +1,11 @@
-<li>
-    <span class="file-name">
-        <%= file.name %>
-    </span>
-
-    <span class="file-date">
-        <%= file.createdAt %>
-    </span>
+<li class="item-container">
+    <div class="item-content">
+        <span class="file-name">
+            <%= file.name %>
+        </span>
+        <span class="file-date">
+            <%= file.createdAt %>
+        </span>
+        <%- include('contextMenu', { itemType: 'file', item: file }); %>
+    </div>
 </li>

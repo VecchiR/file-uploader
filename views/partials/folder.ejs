@@ -1,7 +1,10 @@
-<li>
-    <a href="/storage/folder/<%= folder.id %>">
-        <span class="folder-name">
-            <%= folder.name %>
-        </span>
-    </a>
+<li class="item-container">
+    <div class="item-content">
+        <a href="/storage/folder/<%= folder.id %>" class="folder-link">
+            <span class="folder-name">
+                <%= folder.name %>
+            </span>
+        </a>
+        <%- include('contextMenu', { itemType: 'folder', item: folder }); %>
+    </div>
 </li>

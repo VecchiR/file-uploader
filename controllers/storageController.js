@@ -1,6 +1,6 @@
 const { upload } = require('../config/multer');
 const { File, Folder } = require('../config/prismaClient');
-const { processFileData, cleanupUploadedFiles, getStorageItems, getFolderName } = require('../lib/storageUtils');
+const { processFileData, cleanupUploadedFiles, getStorageItems, getFolderName, deleteRecursively } = require('../lib/storageUtils');
 
 
 const renderStorageView = async (req, res) => {
@@ -109,9 +109,85 @@ const createFolder = async (req, res) => {
     }
 }
 
+const deleteFile = async (req, res) => {
+    const fileId = req.params.fileId;
+
+    try {
+        // First verify the file exists and belongs to the user
+        const file = await File.findFirst({
+            where: {
+                id: fileId,
+                ownerId: req.user.id
+            }
+        });
+
+        if (!file) {
+            res.locals.errors = [{ msg: 'File not found or access denied' }];
+            return renderStorageView(req, res);
+        }
+
+        // Store the parentFolderId before deleting the file
+        const parentFolderId = file.parentFolderId;
+
+        // Delete the file from database
+        await File.delete({
+            where: {
+                id: fileId
+            }
+        });
+
+        // Redirect back to the current folder or root
+        res.redirect(parentFolderId ? `/storage/folder/${parentFolderId}` : '/storage');
+
+    } catch (error) {
+        console.error('Error deleting file:', error);
+        res.locals.errors = [{ msg: 'Error deleting file' }];
+        return renderStorageView(req, res);
+    }
+};
+
+const deleteFolder = async (req, res) => {
+    const folderId = req.params.folderId;
+
+    try {
+        // First verify the folder exists and belongs to the user
+        const folder = await Folder.findFirst({
+            where: {
+                id: folderId,
+                ownerId: req.user.id
+            },
+            include: {
+                files: true,
+                children: true
+            }
+        });
+
+        if (!folder) {
+            res.locals.errors = [{ msg: 'Folder not found or access denied' }];
+            return renderStorageView(req, res);
+        }
+
+        // Store the parentFolderId before deleting the folder
+        const parentFolderId = folder.parentFolderId;
+
+        // Delete the folder and all its contents recursively
+        await deleteRecursively(folderId, req.user.id);
+
+        // Redirect back to the parent folder or root
+        res.redirect(parentFolderId ? `/storage/folder/${parentFolderId}` : '/storage');
+
+    } catch (error) {
+        console.error('Error deleting folder:', error);
+        res.locals.errors = [{ msg: 'Error deleting folder' }];
+        return renderStorageView(req, res);
+    }
+};
+
 
 module.exports = {
     uploadFiles,
     createFolder,
-    renderStorageView
+    renderStorageView,
+    deleteFile,
+    deleteFolder
 }

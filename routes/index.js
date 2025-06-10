@@ -19,7 +19,9 @@ router.post('/storage/folder/:folderId', requireAuth, storageController.uploadFi
 router.post('/storage/create-folder', requireAuth, storageController.createFolder);
 router.post('/storage/folder/:folderId/create-folder', requireAuth, storageController.createFolder);
 
-
+// Delete routes
+router.post('/storage/file/:fileId/delete', requireAuth, storageController.deleteFile);
+router.post('/storage/folder/:folderId/delete', requireAuth, storageController.deleteFolder);
 
 router.get('/login', redirectIfAuthenticated, (req, res) => {
     res.render('login-form', {
