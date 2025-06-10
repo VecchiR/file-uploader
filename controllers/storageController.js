@@ -27,8 +27,13 @@ const uploadFiles = async (req, res, next) => {
             return renderStorageView(req, res);
         }
 
+        if (!req.files || req.files.length === 0) {
+            res.locals.errors = [{ msg: 'No files uploaded' }];
+            return renderStorageView(req, res);
+        }
+
         try {
-            const fileData = await processFileData(req.files, req.user.id);
+            const fileData = await processFileData(req);
 
             await File.createMany({
                 data: fileData
