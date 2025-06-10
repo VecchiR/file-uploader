@@ -111,184 +111,46 @@ const createFolder = async (req, res) => {
 
 const deleteFile = async (req, res) => {
     const fileId = req.params.fileId;
-
-    try {
-        // First verify the file exists and belongs to the user
-        const file = await File.findFirst({
-            where: {
-                id: fileId,
-                ownerId: req.user.id
-            }
-        });
-
-        if (!file) {
-            res.locals.errors = [{ msg: 'File not found or access denied' }];
-            return renderStorageView(req, res);
-        }
-
-        // Store the parentFolderId before deleting the file
-        const parentFolderId = file.parentFolderId;
-
-        // Delete the file from database
-        await File.delete({
-            where: {
-                id: fileId
-            }
-        });
-
-        // Redirect back to the current folder or root
-        res.redirect(parentFolderId ? `/storage/folder/${parentFolderId}` : '/storage');
-
-    } catch (error) {
-        console.error('Error deleting file:', error);
-        res.locals.errors = [{ msg: 'Error deleting file' }];
+    const result = await handleDelete(req, res, fileId, 'file');
+    
+    if (result.error) {
         return renderStorageView(req, res);
     }
+    
+    res.redirect(result.parentFolderId ? `/storage/folder/${result.parentFolderId}` : '/storage');
 };
 
 const deleteFolder = async (req, res) => {
     const folderId = req.params.folderId;
-
-    try {
-        // First verify the folder exists and belongs to the user
-        const folder = await Folder.findFirst({
-            where: {
-                id: folderId,
-                ownerId: req.user.id
-            },
-            include: {
-                files: true,
-                children: true
-            }
-        });
-
-        if (!folder) {
-            res.locals.errors = [{ msg: 'Folder not found or access denied' }];
-            return renderStorageView(req, res);
-        }
-
-        // Store the parentFolderId before deleting the folder
-        const parentFolderId = folder.parentFolderId;
-
-        // Delete the folder and all its contents recursively
-        await deleteRecursively(folderId, req.user.id);
-
-        // Redirect back to the parent folder or root
-        res.redirect(parentFolderId ? `/storage/folder/${parentFolderId}` : '/storage');
-
-    } catch (error) {
-        console.error('Error deleting folder:', error);
-        res.locals.errors = [{ msg: 'Error deleting folder' }];
+    const result = await handleDelete(req, res, folderId, 'folder');
+    
+    if (result.error) {
         return renderStorageView(req, res);
     }
+    
+    res.redirect(result.parentFolderId ? `/storage/folder/${result.parentFolderId}` : '/storage');
 };
 
 const renameFile = async (req, res) => {
     const fileId = req.params.fileId;
-    const newName = req.body.new_name;
-
-    if (!newName || newName.trim() === '') {
-        res.locals.errors = [{ msg: 'File name cannot be empty' }];
+    const result = await handleRename(req, res, fileId, 'file');
+    
+    if (result.error) {
         return renderStorageView(req, res);
     }
-
-    try {
-        // First verify the file exists and belongs to the user
-        const file = await File.findFirst({
-            where: {
-                id: fileId,
-                ownerId: req.user.id
-            }
-        });
-
-        if (!file) {
-            res.locals.errors = [{ msg: 'File not found or access denied' }];
-            return renderStorageView(req, res);
-        }
-
-        // Check if a file with the new name already exists in the same location
-        const existingFile = await File.findFirst({
-            where: {
-                name: newName,
-                ownerId: req.user.id,
-                parentFolderId: file.parentFolderId,
-                id: { not: fileId } // Exclude the current file
-            }
-        });
-
-        if (existingFile) {
-            res.locals.errors = [{ msg: 'A file with this name already exists in this location' }];
-            return renderStorageView(req, res);
-        }
-
-        // Update the file name
-        await File.update({
-            where: { id: fileId },
-            data: { name: newName }
-        });
-
-        // Redirect back to the current folder or root
-        res.redirect(file.parentFolderId ? `/storage/folder/${file.parentFolderId}` : '/storage');
-
-    } catch (error) {
-        console.error('Error renaming file:', error);
-        res.locals.errors = [{ msg: 'Error renaming file' }];
-        return renderStorageView(req, res);
-    }
+    
+    res.redirect(result.parentFolderId ? `/storage/folder/${result.parentFolderId}` : '/storage');
 };
 
 const renameFolder = async (req, res) => {
     const folderId = req.params.folderId;
-    const newName = req.body.new_name;
-
-    if (!newName || newName.trim() === '') {
-        res.locals.errors = [{ msg: 'Folder name cannot be empty' }];
+    const result = await handleRename(req, res, folderId, 'folder');
+    
+    if (result.error) {
         return renderStorageView(req, res);
     }
-
-    try {
-        // First verify the folder exists and belongs to the user
-        const folder = await Folder.findFirst({
-            where: {
-                id: folderId,
-                ownerId: req.user.id
-            }
-        });
-
-        if (!folder) {
-            res.locals.errors = [{ msg: 'Folder not found or access denied' }];
-            return renderStorageView(req, res);
-        }
-
-        // Check if a folder with the new name already exists in the same location
-        const existingFolder = await Folder.findFirst({
-            where: {
-                name: newName,
-                ownerId: req.user.id,
-                parentFolderId: folder.parentFolderId,
-                id: { not: folderId } // Exclude the current folder
-            }
-        });
-
-        if (existingFolder) {
-            res.locals.errors = [{ msg: 'A folder with this name already exists in this location' }];
-            return renderStorageView(req, res);
-        }
-
-        // Update the folder name
-        await Folder.update({
-            where: { id: folderId },
-            data: { name: newName }
-        });
-
-        // Redirect back to the parent folder or root
-        res.redirect(folder.parentFolderId ? `/storage/folder/${folder.parentFolderId}` : '/storage');
-
-    } catch (error) {
-        console.error('Error renaming folder:', error);
-        res.locals.errors = [{ msg: 'Error renaming folder' }];
-        return renderStorageView(req, res);
-    }
+    
+    res.redirect(result.parentFolderId ? `/storage/folder/${result.parentFolderId}` : '/storage');
 };
 
 module.exports = {
