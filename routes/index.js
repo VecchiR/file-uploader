@@ -9,11 +9,15 @@ router.get('/', (req, res) => {
 });
 
 
-router.get('/storage', requireAuth, (req, res) => storageController.renderStorageView(res));
+router.get('/storage', requireAuth, storageController.renderStorageView);
+router.get('/storage/folder/:folderId', requireAuth, storageController.renderStorageView);
+
 
 router.post('/storage', requireAuth, storageController.uploadFiles);
+router.post('/storage/folder/:folderId', requireAuth, storageController.uploadFiles);
 
 router.post('/storage/create-folder', requireAuth, storageController.createFolder);
+router.post('/storage/folder/:folderId/create-folder', requireAuth, storageController.createFolder);
 
 
 

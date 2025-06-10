@@ -1,12 +1,17 @@
 const { upload } = require('../config/multer');
 const { File, Folder } = require('../config/prismaClient');
-const { processFileData, cleanupUploadedFiles, getStorageItems } = require('../lib/storageUtils');
+const { processFileData, cleanupUploadedFiles, getStorageItems, getFolderName } = require('../lib/storageUtils');
 
-const renderStorageView = async (res, options = {}) => {
+
+const renderStorageView = async (req, res) => {
+
+    const folderId = req.params.folderId || null;
+    const title = await getFolderName(folderId) || "Storage";
+
     try {
         const { files, folders } =
-            await getStorageItems(res.locals.currentUser.id);
-        res.render('storage', { files, folders, ...options });
+            await getStorageItems(req.user.id, folderId);
+        res.render('storage', { files, folders, title, folderId });
     } catch (error) {
         console.error('Error rendering storage view:', error);
         res.render('storage', {
@@ -18,9 +23,8 @@ const renderStorageView = async (res, options = {}) => {
 const uploadFiles = async (req, res, next) => {
     await upload.array('files', 10)(req, res, async (err) => {
         if (err) {
-            return renderStorageView(res, {
-                errors: [{ msg: 'Error uploading files' }]
-            });
+            res.locals.errors = [{ msg: 'Error uploading files' }];
+            return renderStorageView(req, res);
         }
 
         try {
@@ -30,16 +34,15 @@ const uploadFiles = async (req, res, next) => {
                 data: fileData
             });
 
-            res.redirect('/storage');
+            res.redirect(req.params.folderId ? `/storage/folder/${req.params.folderId}` : '/storage');
 
         } catch (error) {
             console.error('Database error:', error);
 
             // If database operation fails, delete the uploaded files
             await cleanupUploadedFiles(req.files);
-            return renderStorageView(res, {
-                errors: [{ msg: 'Error saving file information' }]
-            });
+            res.locals.errors = [{ msg: 'Error saving file information' }];
+            return renderStorageView(req, res);
         }
     });
 }
@@ -47,42 +50,57 @@ const uploadFiles = async (req, res, next) => {
 
 const createFolder = async (req, res) => {
     const folderName = req.body.folder_name;
+    const parentFolderId = req.params.folderId || null;
 
     if (!folderName || folderName.trim() === '') {
-        return renderStorageView(res, {
-            errors: [{ msg: 'Folder name cannot be empty' }]
-        });
+        res.locals.errors = [{ msg: 'Folder name cannot be empty' }];
+        return renderStorageView(req, res);
     }
 
     try {
+        // First verify that the parent folder exists and belongs to the user if parentFolderId is provided
+        if (parentFolderId) {
+            const parentFolder = await Folder.findFirst({
+                where: {
+                    id: parentFolderId,
+                    ownerId: req.user.id
+                }
+            });
+
+            if (!parentFolder) {
+                res.locals.errors = [{ msg: 'Parent folder not found' }];
+                return renderStorageView(req, res);
+            }
+        }
+
+        // Check for existing folder with same name in the same location
         const existingFolder = await Folder.findFirst({
             where: {
                 name: folderName,
                 ownerId: req.user.id,
-                parentFolderId: null
+                parentFolderId: parentFolderId
             }
         });
 
         if (existingFolder) {
-            return renderStorageView(res, {
-                errors: [{ msg: 'Folder already exists' }]
-            });
+            res.locals.errors = [{ msg: 'Folder already exists in this location' }];
+            return renderStorageView(req, res);
         }
 
         await Folder.create({
             data: {
                 name: folderName,
                 ownerId: req.user.id,
-                parentFolderId: null
+                parentFolderId: parentFolderId
             }
         });
 
-        res.redirect('/storage');
+        // Redirect to parent folder if we're creating inside a folder, otherwise to root
+        res.redirect(parentFolderId ? `/storage/folder/${parentFolderId}` : '/storage');
     } catch (error) {
         console.error('Error creating folder:', error);
-        await renderStorageView(res, {
-            errors: [{ msg: 'Error creating folder' }]
-        });
+        res.locals.errors = [{ msg: 'Error creating folder' }];
+        await renderStorageView(req, res);
     }
 }
 

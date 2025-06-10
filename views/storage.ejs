@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Storage</title>
+  <title><%= title %></title>
   <style>
     .error {
       color: red;
@@ -55,7 +55,8 @@
       font-size: 0.9em;
     }
 
-    .upload-form {
+    .upload-form,
+    .create-folder-form {
       margin: 20px 0;
       padding: 20px;
       background-color: #f9f9f9;
@@ -67,7 +68,7 @@
 <body>
   <div class="storage-container">
     <a href="/">Home</a>
-    <h1>Storage</h1>
+    <h1><%= title %></h1>
 
     <% if (typeof errors !== 'undefined') { %>
     <div class="error">
@@ -77,11 +78,7 @@
     </div>
     <% } %>
 
-    <form class="upload-form" action="/storage" method="POST" enctype="multipart/form-data">
-      <div>
-        <label for="path">Upload to folder (optional):</label>
-        <input type="text" id="path" name="path" placeholder="e.g., folder1/subfolder">
-      </div>
+    <form class="upload-form" action="<%= folderId ? `/storage/folder/${folderId}` : '/storage' %>" method="POST" enctype="multipart/form-data">
       <div>
         <label for="files">Select files:</label>
         <input type="file" id="files" name="files" multiple>
@@ -89,10 +86,10 @@
       <button type="submit">Upload</button>
     </form>
 
-    <form class="create-folder-form" action="/storage/create-folder" method="POST">
+    <form class="create-folder-form" action="<%= folderId ? `/storage/folder/${folderId}/create-folder` : '/storage/create-folder' %>" method="POST">
       <div>
         <label for="folder_name">Folder name:</label>
-        <input type="text" id="folder_name" name="folder_name" placeholder="new folder" required>
+        <input type="text" id="folder_name" name="folder_name" placeholder="New folder" required>
       </div>
       <button type="submit">Create folder</button>
     </form>
