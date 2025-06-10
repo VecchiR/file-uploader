@@ -56,6 +56,44 @@
     .delete-button:hover {
         background-color: #fff5f5;
     }
+
+    .rename-form {
+        position: absolute;
+        background: white;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        z-index: 1000;
+    }
+
+    .rename-form input[type="text"] {
+        padding: 4px 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        margin-right: 8px;
+    }
+
+    .rename-form button {
+        padding: 4px 8px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin: 0 4px;
+    }
+
+    .rename-form button[type="submit"] {
+        background: #4CAF50;
+        color: white;
+    }
+
+    .rename-form button[type="button"] {
+        background: #f1f1f1;
+    }
+
+    .rename-form button:hover {
+        opacity: 0.9;
+    }
 </style>
 
 <script>
@@ -80,13 +118,49 @@
             });
         }
     });
+
+    function showRenameInput(itemType, itemId, currentName) {
+        // Hide the context menu
+        const menuId = `${itemType}-${itemId}`;
+        const menu = document.getElementById(menuId);
+        menu.classList.remove('show');
+
+        // Show the rename form
+        const renameForm = document.getElementById(`rename-${itemType}-${itemId}`);
+        renameForm.style.display = 'block';
+
+        // Focus the input and select the text
+        const input = renameForm.querySelector('input[name="new_name"]');
+        input.focus();
+        input.select();
+    }
+
+    function hideRenameInput(itemType, itemId) {
+        const renameForm = document.getElementById(`rename-${itemType}-${itemId}`);
+        renameForm.style.display = 'none';
+    }
+
+    function deleteItem(itemType, itemId) {
+        if (confirm(`Are you sure you want to delete this ${itemType}?`)) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/storage/${itemType}/${itemId}/delete`;
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
 </script>
 
 <% /* Context Menu Component */ %>
 <%# Usage: include with itemType (file/folder) and item (the file/folder object) %>
 <button class="context-button" onclick="toggleContextMenu('<%= itemType %>-<%= item.id %>')">⋮</button>
 <div id="<%= itemType %>-<%= item.id %>" class="context-menu">
-    <form action="/storage/<%= itemType %>/<%= item.id %>/delete" method="POST" class="delete-form">
-        <button type="submit" class="delete-button">Delete</button>
-    </form>
+    <button onclick="showRenameInput('<%= itemType %>', '<%= item.id %>', '<%= item.name %>')" class="menu-button">Rename</button>
+    <button onclick="deleteItem('<%= itemType %>', '<%= item.id %>')" class="menu-button">Delete</button>
 </div>
+
+<form id="rename-<%= itemType %>-<%= item.id %>" class="rename-form" style="display: none;" action="/storage/<%= itemType %>/<%= item.id %>/rename" method="POST">
+    <input type="text" name="new_name" value="<%= item.name %>" />
+    <button type="submit">Save</button>
+    <button type="button" onclick="hideRenameInput('<%= itemType %>', '<%= item.id %>')">Cancel</button>
+</form>

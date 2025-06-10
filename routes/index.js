@@ -23,6 +23,10 @@ router.post('/storage/folder/:folderId/create-folder', requireAuth, storageContr
 router.post('/storage/file/:fileId/delete', requireAuth, storageController.deleteFile);
 router.post('/storage/folder/:folderId/delete', requireAuth, storageController.deleteFolder);
 
+// Rename routes
+router.post('/storage/file/:fileId/rename', requireAuth, storageController.renameFile);
+router.post('/storage/folder/:folderId/rename', requireAuth, storageController.renameFolder);
+
 router.get('/login', redirectIfAuthenticated, (req, res) => {
     res.render('login-form', {
         error: req.flash('error')
