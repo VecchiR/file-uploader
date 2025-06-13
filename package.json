@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "browsersync": "npx browser-sync start --proxy localhost:3000 --files \"views/**/*.ejs,public/**/*,**/*.js\" --reload-delay 1000"
   },
   "keywords": [],
   "author": "",
@@ -24,6 +25,8 @@
   },
   "devDependencies": {
     "@types/node": "^22.15.29",
+    "browser-sync": "^3.0.4",
+    "nodemon": "^3.1.10",
     "prisma": "^6.8.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
