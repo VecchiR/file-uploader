@@ -83,15 +83,15 @@ async function showMoveItemModal(itemType, itemId, parentFolderId) {
     currentMoveOperation.dialog.showModal();
 
     // Fetch and populate initial data
-    await fetchAndUpdateModalContent(itemType, itemId, parentFolderId);
+    await fetchAndUpdateModalContent(parentFolderId);
 }
 
-async function fetchAndUpdateModalContent(itemType, itemId, parentFolderId) {
+async function fetchAndUpdateModalContent(folderId = null) {
     try {
-        const param = parentFolderId ? `?parentFolderId=${parentFolderId}` : "";
-        const url = (itemType == 'folder' && !itemId) ?
-            `/storage/movedata` : // if it's a FOLDER without an id -> a.k.a.: it's the root folder (id = null)
-            `/storage/${itemType}/${itemId}/movedata${param}`;
+        
+        const param = folderId ? `?folderId=${folderId}` : "";
+        const url = `/storage/getMoveData${param}`;
+
         const response = await fetch(url);
         const data = await response.json();
         updateModalContent(data);
@@ -141,8 +141,5 @@ function handlePathClick(encodedFolder) {
     console.log('clicked path', folder);
 
     // Fetch new data for this folder
-    fetchAndUpdateModalContent(
-        'folder',
-        folder.id
-    );
+    fetchAndUpdateModalContent(folder.id);
 }
