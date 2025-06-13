@@ -1,6 +1,6 @@
 const { upload } = require('../config/multer');
 const { File, Folder } = require('../config/prismaClient');
-const { processFileData, cleanupUploadedFiles, getStorageItems, getFolderName, handleDelete, handleRename } = require('../lib/storageUtils');
+const { processFileData, cleanupUploadedFiles, getStorageItems, getFolderName, handleDelete, handleRename, getMoveData } = require('../lib/storageUtils');
 
 
 const renderStorageView = async (req, res) => {
@@ -153,149 +153,17 @@ const renameFolder = async (req, res) => {
     res.redirect(result.parentFolderId ? `/storage/folder/${result.parentFolderId}` : '/storage');
 };
 
-const fileMoveData = async (req, res) => {
-    await getItemMoveData(req, res, "file");
-};
 
-const folderMoveData = async (req, res) => {
-    await getItemMoveData(req, res, "folder");
-};
-
-const rootFolderMoveData = async (req, res) => {
+const moveItem = async (req, res) => {
     try {
-        const ownerId = req.user.id;
-
-        const subFolders = await Folder.findMany({
-            where: {
-                ownerId: ownerId,
-                parentFolderId: null
-            },
-            select: {
-                id: true,
-                name: true,
-                parentFolderId: true,
-            }
-        });
-
-        const rootFolder = {
-            id: null,
-            name: 'root',
-            parentId: null
-        };
-
-        const folderPath = [rootFolder];
-
-        return res.json({
-            currentItem: rootFolder,
-            currentPath: folderPath,
-            availableFolders: subFolders
-        });
-
+        const moveData = await getMoveData(req, res);
+        return res.json(moveData);
+    
     } catch (err) {
         console.error('Error fetching move data:', err);
         return res.status(500).json({ error: 'Internal server error' });
     }
-};
-
-
-// START OF CHANGES
-// START OF CHANGES
-// ATTENTIOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOON!
-const getItemMoveData = async (req, res) => {
-    try {
-        const folderId = req.query.parentFolderId ? req.query.parentFolderId : req.params.folderId;
-        const ownerId = req.user.id;
-
-        const currentFolder = await Folder.findUnique({
-            where: {
-                id: folderId,
-                ownerId: ownerId
-            },
-            select: {
-                id: true,
-                name: true,
-                parentFolderId: true
-            }
-        });
-
-        if (!currentFolder) {
-            return res.status(404).json({ error: 'Folder not found' });
-        }
-
-        const folderPath = [];
-
-        const getParentFolders = async (parentId) => {
-            if (!parentId) return;
-
-            const parentFolder = await Folder.findUnique({
-                where: {
-                    id: parentId,
-                    ownerId: ownerId
-                },
-                select: {
-                    id: true,
-                    name: true,
-                    parentFolderId: true,
-                }
-            });
-
-            if (parentFolder) {
-                folderPath.unshift({
-                    id: parentFolder.id,
-                    name: parentFolder.name,
-                    parentId: parentFolder.parentFolderId
-                });
-                await getParentFolders(parentFolder.parentFolderId);
-            }
-        };
-
-        // Get current path
-        await getParentFolders(currentFolder.parentFolderId);
-
-        // Add itself (current folder) to the end of path
-        folderPath.push({
-            id: currentFolder.id,
-            name: currentFolder.name,
-            parentId: currentFolder.parentFolderId
-        });
-
-        // Always add root folder at the beginning of the path
-        folderPath.unshift({
-            id: null,
-            name: 'root',
-            parentId: null
-        });
-
-
-        const subFolders = await Folder.findMany({
-            where: {
-                ownerId: ownerId,
-                parentFolderId: folderId
-            },
-            select: {
-                id: true,
-                name: true,
-                parentFolderId: true,
-            }
-        });
-
-
-
-        return res.json({
-            currentFolder: {
-                id: currentFolder.id,
-                name: currentFolder.name,
-                parentId: currentFolder.parentFolderId
-            },
-            currentPath: folderPath,
-            availableFolders: subFolders
-        });
-
-    } catch (err) {
-        console.error('Error fetching move data:', err);
-        return res.status(500).json({ error: 'Internal server error' });
-    }
-};
+}
 
 
 module.exports = {
@@ -306,8 +174,5 @@ module.exports = {
     deleteFolder,
     renameFile,
     renameFolder,
-    fileMoveData,
-    folderMoveData,
-    rootFolderMoveData,
-    getItemMoveData
+    moveItem
 };
