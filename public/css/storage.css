@@ -1,0 +1,63 @@
+.error {
+      color: red;
+      margin-bottom: 10px;
+    }
+
+    .storage-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    ul {
+      list-style: none;
+      padding-left: 20px;
+    }
+
+    .folder,
+    .file {
+      margin: 10px 0;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .folder {
+      background-color: #f5f5f5;
+    }
+
+    .file {
+      background-color: white;
+    }
+
+    .folder-info,
+    .file-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .folder-name,
+    .file-name {
+      font-weight: bold;
+    }
+
+    .folder-date,
+    .file-date {
+      color: #666;
+      font-size: 0.9em;
+    }
+
+    .folder-link {
+      text-decoration: none;
+      color: inherit;
+      flex-grow: 1;
+    }
+
+    .upload-form,
+    .create-folder-form {
+      margin: 20px 0;
+      padding: 20px;
+      background-color: #f9f9f9;
+      border-radius: 4px;
+    }

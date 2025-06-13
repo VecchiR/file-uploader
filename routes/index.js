@@ -27,6 +27,12 @@ router.post('/storage/folder/:folderId/delete', requireAuth, storageController.d
 router.post('/storage/file/:fileId/rename', requireAuth, storageController.renameFile);
 router.post('/storage/folder/:folderId/rename', requireAuth, storageController.renameFolder);
 
+// Move item routes
+router.get('/storage/movedata', requireAuth, storageController.rootFolderMoveData);
+router.get('/storage/file/:fileId/movedata', requireAuth, storageController.getItemMoveData);
+router.get('/storage/folder/:folderId/movedata', requireAuth, storageController.getItemMoveData); 
+
+
 router.get('/login', redirectIfAuthenticated, (req, res) => {
     res.render('login-form', {
         error: req.flash('error')
