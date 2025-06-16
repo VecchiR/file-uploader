@@ -106,7 +106,7 @@ function updateModalContent(data) {
     let path = "";
     data.currentPath.forEach(folder => {
         path = path + `<span 
-            onclick="handlePathClick('${encodeURIComponent(JSON.stringify(folder))}')"
+            onclick="handleFolderClick('${encodeURIComponent(JSON.stringify(folder))}')"
             style="cursor: pointer;"
         >${folder.name}/</span>`;
     });
@@ -117,7 +117,8 @@ function updateModalContent(data) {
     } else {
         data.availableFolders.forEach(folder => {
             folderList = folderList + `
-            <div>
+            <div onclick="handleFolderClick('${encodeURIComponent(JSON.stringify(folder))}')"
+            style="cursor: pointer;">
                 ${folder.name}
             </div>
             `;
@@ -136,7 +137,7 @@ function updateModalContent(data) {
     `;
 }
 
-function handlePathClick(encodedFolder) {
+function handleFolderClick(encodedFolder) {
     const folder = JSON.parse(decodeURIComponent(encodedFolder));
     console.log('clicked path', folder);
 
