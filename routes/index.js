@@ -33,6 +33,7 @@ router.post('/storage/file/:fileId/move/:targetFolderId', requireAuth, storageCo
 router.post('/storage/folder/:folderId/move/:targetFolderId', requireAuth, storageController.moveItem);
 
 router.get('/storage/file/:fileId', requireAuth, storageController.getFileDetails);
+router.get('/storage/file/:fileId/download', requireAuth, storageController.downloadFile);
 
 
 

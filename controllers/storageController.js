@@ -254,6 +254,28 @@ const getFileDetails = async (req, res) => {
     }
 }
 
+const downloadFile = async (req, res) => {
+    try {
+        const fileId = req.params.fileId;
+        const file = await File.findFirst({
+            where: {
+                id: fileId,
+                ownerId: req.user.id
+            }
+        });
+
+        if (!file) {
+            res.locals.errors = [{ msg: 'File not found or access denied' }];
+            return renderStorageView(req, res);
+        }
+        res.download(file.url, file.name);
+    }  catch (error) {
+        console.error('Error downloading file:', error);
+        res.locals.errors = [{ msg: 'Error downloading file' }];
+        return renderStorageView(req, res);
+    }
+}
+
 
 module.exports = {
     uploadFiles,
@@ -265,5 +287,6 @@ module.exports = {
     renameFolder,
     getItemMoveData,
     moveItem,
-    getFileDetails
+    getFileDetails,
+    downloadFile
 };
