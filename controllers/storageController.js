@@ -226,6 +226,30 @@ const moveItem = async (req, res) => {
     }
 }
 
+const getFileDetails = async (req, res) => {
+    const fileId = req.params.fileId;
+
+    try {
+        const file = await File.findFirst({
+            where: {
+                id: fileId,
+                ownerId: req.user.id
+            }
+        });
+
+        if (!file) {
+            res.locals.errors = [{ msg: 'File not found or access denied' }];
+            return renderStorageView(req, res);
+        }
+
+        res.render('file-details', { file });
+    } catch (error) {
+        console.error('Error fetching file details:', error);
+        res.locals.errors = [{ msg: 'Error fetching file details' }];
+        return renderStorageView(req, res);
+    }
+}
+
 
 module.exports = {
     uploadFiles,
@@ -236,5 +260,6 @@ module.exports = {
     renameFile,
     renameFolder,
     getItemMoveData,
-    moveItem
+    moveItem,
+    getFileDetails
 };
