@@ -154,14 +154,75 @@ const renameFolder = async (req, res) => {
 };
 
 
-const moveItem = async (req, res) => {
+const getItemMoveData = async (req, res) => {
     try {
         const moveData = await getMoveData(req, res);
         return res.json(moveData);
-    
+
     } catch (err) {
         console.error('Error fetching move data:', err);
         return res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+
+
+const moveItem = async (req, res) => {
+    const itemType = req.path.includes('/file/') ? 'file' : 'folder';
+    const itemId = req.params.fileId || req.params.folderId;
+    const targetFolderId = req.params.targetFolderId == 'null' ? null : req.params.targetFolderId;
+
+    try {
+        const Model = itemType === 'file' ? File : Folder;
+
+        // Verify the item exists and belongs to the user
+        const item = await Model.findFirst({
+            where: {
+                id: itemId,
+                ownerId: req.user.id
+            }
+        });
+
+        if (!item) {
+            res.locals.errors = [{ msg: `The ${itemType} was not found or the access was denied.` }];
+            // Override the params to show the current folder, not the target
+            req.params.folderId = item?.parentFolderId || null;
+            return renderStorageView(req, res);
+        }
+
+        // Check if an item with the same name already exists in the target location
+        const existingItem = await Model.findFirst({
+            where: {
+                name: item.name,
+                parentFolderId: targetFolderId,
+                ownerId: req.user.id,
+                id: { not: itemId }
+            }
+        });
+
+        if (existingItem) {
+            res.locals.errors = [{ msg: `A ${itemType} with the same name already exists in the target folder.` }];
+            // Override the params to show the current folder, not the target
+            req.params.folderId = item.parentFolderId;
+            return renderStorageView(req, res);
+        }
+
+        // Update the item's location by modifying parentFolderId
+        await Model.update({
+            where: { id: itemId },
+            data: { parentFolderId: targetFolderId }
+        });
+
+        // Redirect to the target folder after successful move
+        req.params.folderId = item.parentFolderId;
+        return renderStorageView(req, res);
+
+    } catch (error) {
+        console.error(`Error moving ${itemType}:`, error);
+        res.locals.errors = [{ msg: `Error moving ${itemType}` }];
+        // Override the params to show the original folder
+        req.params.folderId = item?.parentFolderId || null;
+        return renderStorageView(req, res);
     }
 }
 
@@ -174,5 +235,6 @@ module.exports = {
     deleteFolder,
     renameFile,
     renameFolder,
+    getItemMoveData,
     moveItem
 };

@@ -28,7 +28,9 @@ router.post('/storage/file/:fileId/rename', requireAuth, storageController.renam
 router.post('/storage/folder/:folderId/rename', requireAuth, storageController.renameFolder);
 
 // Move item routes
-router.get('/storage/getMoveData', requireAuth, storageController.moveItem);
+router.get('/storage/getMoveData', requireAuth, storageController.getItemMoveData);
+router.post('/storage/file/:fileId/move/:targetFolderId', requireAuth, storageController.moveItem);
+router.post('/storage/folder/:folderId/move/:targetFolderId', requireAuth, storageController.moveItem);
 
 
 

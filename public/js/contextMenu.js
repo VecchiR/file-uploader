@@ -2,6 +2,8 @@
 let currentMoveOperation = {
     itemType: null,
     itemId: null,
+    originalFolder: null,
+    targetFolder: null,
     dialog: null
 };
 
@@ -69,6 +71,8 @@ async function showMoveItemModal(itemType, itemId, parentFolderId) {
     currentMoveOperation = {
         itemType,
         itemId,
+        originalFolder: parentFolderId,
+        targetFolder: parentFolderId,
         dialog: document.createElement('dialog')
     };
 
@@ -88,7 +92,7 @@ async function showMoveItemModal(itemType, itemId, parentFolderId) {
 
 async function fetchAndUpdateModalContent(folderId = null) {
     try {
-        
+
         const param = folderId ? `?folderId=${folderId}` : "";
         const url = `/storage/getMoveData${param}`;
 
@@ -131,7 +135,7 @@ function updateModalContent(data) {
         <div id="folder-path">${path}</div>
         <div id="folder-list">${folderList}</div>
         <form method="dialog">
-            <button type="button" onclick="moveItem('${currentMoveOperation.itemType}', ${currentMoveOperation.itemId})">Move here</button>
+            <button type="button" onclick="moveItem('${currentMoveOperation.itemType}', '${currentMoveOperation.itemId}', '${currentMoveOperation.originalFolder}', '${currentMoveOperation.targetFolder}')">Move here</button>
             <button type="button" onclick="this.closest('dialog').close()">Cancel</button>
         </form>
     `;
@@ -143,4 +147,23 @@ function handleFolderClick(encodedFolder) {
 
     // Fetch new data for this folder
     fetchAndUpdateModalContent(folder.id);
+
+    currentMoveOperation.targetFolder = folder.id;
+}
+
+async function moveItem(itemType, itemId) {
+    const targetFolderId = currentMoveOperation.targetFolder || 'null';
+    try {
+        // Create a form to submit
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/storage/${itemType}/${itemId}/move/${targetFolderId}`;
+        document.body.appendChild(form);
+
+        // Submit the form (this will handle the redirect with errors if any)
+        form.submit();
+    } catch (err) {
+        console.error('Error moving item:', err);
+        window.location.reload(); // Fallback to reload on error
+    }
 }
