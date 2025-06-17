@@ -1,6 +1,7 @@
 const { upload } = require('../config/multer');
 const { File, Folder } = require('../config/prismaClient');
 const { processFileData, cleanupUploadedFiles, getStorageItems, getFolderName, handleDelete, handleRename, getMoveData } = require('../lib/storageUtils');
+const { formatFileSize } = require('../lib/tools');
 
 
 const renderStorageView = async (req, res) => {
@@ -241,6 +242,9 @@ const getFileDetails = async (req, res) => {
             res.locals.errors = [{ msg: 'File not found or access denied' }];
             return renderStorageView(req, res);
         }
+
+
+        file.formattedSize = formatFileSize(file.size);
 
         res.render('file-details', { file });
     } catch (error) {
