@@ -268,7 +268,24 @@ const downloadFile = async (req, res) => {
             res.locals.errors = [{ msg: 'File not found or access denied' }];
             return renderStorageView(req, res);
         }
-        res.download(file.url, file.name);
+
+        try {
+            // Fetch the file from Cloudinary
+            const response = await fetch(file.url);
+            if (!response.ok) throw new Error('Failed to fetch file from storage');
+
+            // Set headers for download
+            res.setHeader('Content-Disposition', `attachment; filename="${file.name}"`);
+            res.setHeader('Content-Type', file.mimeType);
+
+            // Get the response as arraybuffer and send it
+            const buffer = await response.arrayBuffer();
+            res.send(Buffer.from(buffer));
+        } catch (fetchError) {
+            console.error('Error downloading file:', fetchError);
+            res.locals.errors = [{ msg: 'Error downloading file' }];
+            return renderStorageView(req, res);
+        }
     }  catch (error) {
         console.error('Error downloading file:', error);
         res.locals.errors = [{ msg: 'Error downloading file' }];

@@ -43,13 +43,14 @@ model Folder {
 }
 
 model File {
-  id             String  @id @default(uuid())
-  name           String  @default("New File")
-  ownerId        String
-  parentFolderId String?
-  size           Int     @default(0) // File size in bytes
-  mimeType       String  @db.VarChar(255)
-  url            String  @db.VarChar(2048)
+  id                String  @id @default(uuid())
+  name              String  @default("New File")
+  ownerId           String
+  parentFolderId    String?
+  size              Int     @default(0) // File size in bytes
+  mimeType          String  @db.VarChar(255)
+  url               String  @db.VarChar(2048) // cloudinary URL
+  storage_public_id String  @db.VarChar(255)  // cloudinary public ID
 
   owner  User    @relation("UserFiles", fields: [ownerId], references: [id])
   folder Folder? @relation("FolderFiles", fields: [parentFolderId], references: [id])
