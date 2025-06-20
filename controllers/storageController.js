@@ -2,6 +2,8 @@ const { upload } = require('../config/multer');
 const { File, Folder } = require('../config/prismaClient');
 const { processFileData, cleanupUploadedFiles, getStorageItems, getFolderName, handleDelete, handleRename, getMoveData } = require('../lib/storageUtils');
 const { formatFileSize } = require('../lib/tools');
+const { checkFilePermission, checkFolderPermission } = require('../lib/permissionUtils');
+
 
 
 const renderStorageView = async (req, res) => {
@@ -12,7 +14,24 @@ const renderStorageView = async (req, res) => {
     try {
         const { files, folders } =
             await getStorageItems(req.user.id, folderId);
-        res.render('storage', { files, folders, title, folderId });
+
+        // Check permissions for each file/folder
+        const filesWithPerms = await Promise.all(files.map(async file => ({
+            ...file,
+            canEdit: await checkFilePermission(req.user.id, file.id, 'EDITOR')
+        })));
+        const foldersWithPerms = await Promise.all(folders.map(async folder => ({
+            ...folder,
+            canEdit: await checkFolderPermission(req.user.id, folder.id, 'EDITOR')
+        })));
+
+        res.render('storage', {
+            files: filesWithPerms,
+            folders: foldersWithPerms,
+            title,
+            folderId
+        });
+
     } catch (error) {
         console.error('Error rendering storage view:', error);
         res.render('storage', {
@@ -286,7 +305,7 @@ const downloadFile = async (req, res) => {
             res.locals.errors = [{ msg: 'Error downloading file' }];
             return renderStorageView(req, res);
         }
-    }  catch (error) {
+    } catch (error) {
         console.error('Error downloading file:', error);
         res.locals.errors = [{ msg: 'Error downloading file' }];
         return renderStorageView(req, res);
