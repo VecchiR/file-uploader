@@ -208,6 +208,30 @@ const moveItem = async (req, res) => {
             return renderStorageView(req, res);
         }
 
+        // Prevent moving to the same folder
+        if (item.parentFolderId === targetFolderId) {
+            res.locals.errors = [{ msg: 'Item is already in the selected folder.' }];
+            req.params.folderId = item.parentFolderId;
+            return renderStorageView(req, res);
+        }
+
+        // Prevent moving a folder into itself or its descendants
+        if (itemType === 'folder' && targetFolderId) {
+            let current = targetFolderId;
+            while (current) {
+                if (current === itemId) {
+                    res.locals.errors = [{ msg: 'Cannot move a folder into itself or its subfolders.' }];
+                    req.params.folderId = item.parentFolderId;
+                    return renderStorageView(req, res);
+                }
+                const parent = await Folder.findUnique({
+                    where: { id: current },
+                    select: { parentFolderId: true }
+                });
+                current = parent ? parent.parentFolderId : null;
+            }
+        }
+
         // Update the item's location by modifying parentFolderId
         await Model.update({
             where: { id: itemId },
