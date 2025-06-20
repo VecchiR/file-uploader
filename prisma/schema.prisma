@@ -25,6 +25,9 @@ model User {
   folders Folder[] @relation("UserFolders")
   files   File[]   @relation("UserFiles")
 
+  sharedAccess SharedAccess[]
+  permissions  UserPermission[]
+
   createdAt DateTime @default(now())
 }
 
@@ -39,6 +42,9 @@ model Folder {
   children     Folder[] @relation("FolderChildren")
   files        File[]   @relation("FolderFiles")
 
+  sharedAccess    SharedAccess[]   @relation("FolderSharing")
+  userPermissions UserPermission[] @relation("FolderPermissions")
+
   createdAt DateTime @default(now())
 }
 
@@ -50,12 +56,66 @@ model File {
   size              Int     @default(0) // File size in bytes
   mimeType          String  @db.VarChar(255)
   url               String  @db.VarChar(2048) // cloudinary URL
-  storage_public_id String  @db.VarChar(255)  // cloudinary public ID
+  storage_public_id String  @db.VarChar(255) // cloudinary public ID
 
   owner  User    @relation("UserFiles", fields: [ownerId], references: [id])
   folder Folder? @relation("FolderFiles", fields: [parentFolderId], references: [id])
 
+  sharedAccess    SharedAccess[]   @relation("FileSharing")
+  userPermissions UserPermission[] @relation("FilePermissions")
+
   createdAt DateTime @default(now())
+}
+
+enum Role {
+  VIEWER
+  EDITOR
+}
+
+enum AccessType {
+  PRIVATE
+  PUBLIC
+  MIXED
+}
+
+model SharedAccess {
+  id String @id @default(uuid())
+
+  fileId   String?
+  folderId String?
+  file     File?   @relation("FileSharing", fields: [fileId], references: [id])
+  folder   Folder? @relation("FolderSharing", fields: [folderId], references: [id])
+
+  accessType      AccessType @default(PRIVATE)
+  defaultRole     Role       @default(VIEWER) // For public access
+  expiresAt       DateTime?
+  publicLinkToken String?    @unique 
+
+  createdAt   DateTime @default(now())
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id])
+
+  userPermissions UserPermission[] 
+}
+
+model UserPermission {
+  id String @id @default(uuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  fileId   String?
+  folderId String?
+  file     File?   @relation("FilePermissions", fields: [fileId], references: [id])
+  folder   Folder? @relation("FolderPermissions", fields: [folderId], references: [id])
+
+  role           Role
+  sharedAccessId String
+  sharedAccess   SharedAccess @relation(fields: [sharedAccessId], references: [id])
+
+  grantedAt DateTime @default(now())
+
+  @@unique([userId, fileId, folderId]) // One permission per user per resource
 }
 
 model Session {
