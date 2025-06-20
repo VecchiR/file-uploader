@@ -12,9 +12,13 @@ const routes = require('./routes');
 const { addAuthState } = require('./middleware/authMiddleware');
 const flash = require('connect-flash');
 
+const morgan = require('morgan');
 
 
 const app = express();
+
+app.use(morgan('dev'));
+
 
 app.use(
   session({
