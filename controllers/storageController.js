@@ -336,6 +336,29 @@ const downloadFile = async (req, res) => {
     }
 }
 
+const getItemPermissions = async (req, res) => {
+    const { itemType, itemId } = req.params;
+    const Model = itemType === 'file' ? File : Folder;
+
+    // Fetch sharedAccess and userPermissions
+    const item = await Model.findUnique({
+        where: { id: itemId },
+        include: {
+            sharedAccess: {
+                include: { userPermissions: { include: { user: true } } }
+            },
+            userPermissions: { include: { user: true } }
+        }
+    });
+
+    if (!item) return res.status(404).json({ error: 'Not found' });
+
+    res.json({
+        sharedAccess: item.sharedAccess,
+        userPermissions: item.userPermissions
+    });
+}
+
 
 module.exports = {
     uploadFiles,
@@ -348,5 +371,6 @@ module.exports = {
     getItemMoveData,
     moveItem,
     getFileDetails,
-    downloadFile
+    downloadFile,
+    getItemPermissions
 };
