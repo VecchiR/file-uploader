@@ -1,18 +1,39 @@
 <link rel="stylesheet" href="/css/contextMenu.css">
 
-<% /* Context Menu Component */ %>
-    <%# Usage: include with itemType (file/folder) and item (the file/folder object) %>
-        <button class="context-button" onclick="toggleContextMenu('<%= itemType %>-<%= item.id %>')">⋮</button>
-        <div id="<%= itemType %>-<%= item.id %>" class="context-menu">
-            <button onclick="showRenameInput('<%= itemType %>', '<%= item.id %>', '<%= item.name %>')"
-                class="menu-button">Rename</button>
-            <button onclick="showMoveItemModal('<%= itemType %>', '<%= item.id %>', '<%= item.parentFolderId %>')" class="menu-button">Move</button>
-            <button onclick="deleteItem('<%= itemType %>', '<%= item.id %>')" class="menu-button">Delete</button>
-        </div>
 
-        <form id="rename-<%= itemType %>-<%= item.id %>" class="rename-form" style="display: none;"
-            action="/storage/<%= itemType %>/<%= item.id %>/rename" method="POST">
-            <input type="text" name="new_name" value="<%= item.name %>" />
-            <button type="submit">Save</button>
-            <button type="button" onclick="hideRenameInput('<%= itemType %>', '<%= item.id %>')">Cancel</button>
-        </form
+<button class="context-button" onclick="toggleContextMenu('<%= itemType %>-<%= item.id %>')" %>>
+    ⋮
+</button>
+
+
+<!-- context menu -> DISABLED untill context-button is clicked -->
+<div id="<%= itemType %>-<%= item.id %>" class="context-menu">
+    <button onclick="showRenameInput('<%= itemType %>', '<%= item.id %>', '<%= item.name %>')" class="menu-button" <%=!item.canEdit ? 'disabled' : '' %>>
+        Rename
+    </button>
+    <button onclick="showMoveItemModal('<%= itemType %>', '<%= item.id %>')" class="menu-button" <%=!item.canEdit ? 'disabled' : '' %>>
+        Move
+    </button>
+
+    
+    
+    <button onclick="showShareItemModal('<%= itemType %>', '<%= encodeURIComponent(JSON.stringify(item)) %>')" class="menu-button" <%=!item.canEdit ? 'disabled' : '' %>>
+        Share
+    </button>
+
+
+
+
+    <button onclick="deleteItem('<%= itemType %>', '<%= item.id %>')" class="menu-button" <%=!item.canEdit ? 'disabled' : '' %>>
+        Delete
+    </button>
+</div>
+
+
+
+<!-- rename form -> shown AFTER clicking "rename" button -->
+<form id="rename-<%= itemType %>-<%= item.id %>" class="rename-form" style="display: none;" action="/storage/<%= itemType %>/<%= item.id %>/rename" method="POST">
+  <input type="text" name="new_name" value="<%= item.name %>" />
+  <button type="submit">Save</button>
+  <button type="button" onclick="hideRenameInput('<%= itemType %>', '<%= item.id %>')">Cancel</button>
+</form

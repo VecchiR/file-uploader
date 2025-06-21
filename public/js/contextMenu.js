@@ -167,3 +167,37 @@ async function moveItem(itemType, itemId) {
         window.location.reload(); // Fallback to reload on error
     }
 }
+
+
+async function showShareItemModal(itemType, encodedItem) {
+    const item = JSON.parse(decodeURIComponent(encodedItem));
+    console.log(item);
+
+    // Create and show modal
+    const dialog = document.createElement('dialog');
+    dialog.style.position = 'absolute';
+    dialog.style.top = '50%';
+    dialog.style.transform = 'translateY(-50%)';
+    document.body.appendChild(dialog);
+    dialog.showModal();
+
+    try {
+        // Fetch permissions info
+        const response = await fetch(`/storage/${itemType}/${item.id}/permissions`);
+        const data = await response.json();
+
+        // Populate dialog
+        let html = `<h3>Share ${item.name}</h3>`;
+
+        //display the data and sharing controls
+
+        html += `<form method="dialog"><button type="button" onclick="this.closest('dialog').close()">Close</button></form>`;
+        dialog.innerHTML = html;
+    } catch (err) {
+        dialog.innerHTML = `<div>Error loading permissions</div>
+            <form method="dialog"><button type="button" onclick="this.closest('dialog').close()">Close</button></form>`;
+    }
+
+
+
+}

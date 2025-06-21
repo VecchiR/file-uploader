@@ -38,6 +38,8 @@ router.get('/storage/getMoveData', requireAuth, storageController.getItemMoveDat
 router.post('/storage/file/:fileId/move/:targetFolderId', requireAuth, requireFilePermission(Role.EDITOR), storageController.moveItem);
 router.post('/storage/folder/:folderId/move/:targetFolderId', requireAuth, requireFolderPermission(Role.EDITOR), storageController.moveItem);
 
+router.get('/storage/:itemType/:itemId/permissions', requireAuth, storageController.getItemPermissions);
+
 
 
 
