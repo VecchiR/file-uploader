@@ -1,10 +1,9 @@
-// Global variable to store the current move operation details
+// variable to store the current move operation details
 let currentMoveOperation = {
     itemType: null,
     itemId: null,
     originalFolder: null,
-    targetFolder: null,
-    dialog: null
+    targetFolder: null
 };
 
 function toggleContextMenu(id) {
@@ -73,21 +72,25 @@ async function showMoveItemModal(itemType, itemId, parentFolderId) {
         itemId,
         originalFolder: parentFolderId,
         targetFolder: parentFolderId,
-        dialog: document.createElement('dialog')
     };
 
-    // Setup dialog
-    currentMoveOperation.dialog.id = `move-modal-${itemType}-${itemId}`;
-    currentMoveOperation.dialog.style.position = 'absolute';
-    currentMoveOperation.dialog.style.top = '50%';
-    currentMoveOperation.dialog.style.transform = 'translateY(-50%)';
+ 
+    document.getElementById('move-dialog-title').textContent = `Move ${itemType}`;
+    const confirmBtn = document.getElementById('move-confirm-btn');
+    confirmBtn.onclick = () => moveItem(currentMoveOperation.itemType, currentMoveOperation.itemId);
 
-    // Add to DOM and show
-    document.body.appendChild(currentMoveOperation.dialog);
-    currentMoveOperation.dialog.showModal();
+
+    // Show dialog and fetch data
+    const dialog = document.getElementById('move-dialog');
+    dialog.showModal();
 
     // Fetch and populate initial data
     await fetchAndUpdateModalContent(parentFolderId);
+}
+
+function closeMoveDialog() {
+    document.getElementById('move-dialog').close();
+    currentMoveOperation = { itemType: null, itemId: null, targetFolder: null, originalFolder: null };
 }
 
 async function fetchAndUpdateModalContent(folderId = null) {
@@ -105,7 +108,8 @@ async function fetchAndUpdateModalContent(folderId = null) {
 }
 
 function updateModalContent(data) {
-    if (!currentMoveOperation.dialog) return;
+    const pathContainer = document.getElementById('move-folder-path');
+    const listContainer = document.getElementById('move-folder-list');
 
     let path = "";
     data.currentPath.forEach(folder => {
@@ -129,16 +133,9 @@ function updateModalContent(data) {
         });
     }
 
-    // Update modal content
-    currentMoveOperation.dialog.innerHTML = `
-        <h3>Move ${currentMoveOperation.itemType}</h3>
-        <div id="folder-path">${path}</div>
-        <div id="folder-list">${folderList}</div>
-        <form method="dialog">
-            <button type="button" onclick="moveItem('${currentMoveOperation.itemType}', '${currentMoveOperation.itemId}', '${currentMoveOperation.originalFolder}', '${currentMoveOperation.targetFolder}')">Move here</button>
-            <button type="button" onclick="this.closest('dialog').close()">Cancel</button>
-        </form>
-    `;
+    // Update specific containers instead of entire dialog
+    pathContainer.innerHTML = path;
+    listContainer.innerHTML = folderList;
 }
 
 function handleFolderClick(encodedFolder) {
