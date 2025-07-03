@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="./public/js/contextMenu.js" defer></script>
+    <style>
+        .person-access {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 8px 0;
+        }
+
+        .email {
+            min-width: 200px;
+        }
+
+        .remove-access {
+            border: none;
+            background: none;
+            color: #666;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 0 5px;
+        }
+
+        .remove-access:hover {
+            color: #ff0000;
+        }
+
+        #people_list {
+            list-style: none;
+            padding: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <form action="">
+        <h3>Share [filename]</h3>
+        <p class="email-error" hidden>Some of the emails are invalid: correct them and press "add" again!</p>
+        <input id="emailInput" type="email" multiple placeholder='email1@ex.com, email2@ex.com...' />
+        <button type="button" id="add_email">add</button>
+
+        <div>
+            <h4>People with access</h4>
+            <ul id="people_list">
+            </ul>
+        </div>
+
+        <div>
+            <h4>Public access</h4>
+            <select name="public_access" id="public_access">
+                <option value="private">Private</option>
+                <option value="anyone_with_link">Anyone with the link</option>
+            </select>
+
+            <div id="public_controls">
+                <select name="role" id="role">
+                    <option value="viewer">Viewer</option>
+                    <option value="editor">Editor</option>
+                </select>
+                <input type="date" name="expiration_date" id="expiration_date" />
+            </div>
+        </div>
+
+        <!-- if the user has JavaScript support disabled -->
+        <noscript>
+            <button type="button">Cancel</button>
+            <button type="submit">Share</button>
+        </noscript>
+
+    </form>
+
+    <script>
+        const emailErrorMessage = document.querySelector('.email-error');
+        const publicAccess = document.getElementById('public_access')
+        const publicControls = document.getElementById('public_controls');
+        publicControls.hidden = publicAccess.value !== 'anyone_with_link';
+
+        publicAccess.addEventListener('change', function (event) {
+            console.log(event.target.value);
+            publicControls.hidden = event.target.value !== 'anyone_with_link';
+        });
+
+        const addEmailButton = document.getElementById('add_email');
+        const peopleList = document.getElementById('people_list');
+        addEmailButton.addEventListener('click', function () {
+            const emailInput = document.querySelector('#emailInput');
+
+            // Split the input by commas, trim values and then filter out empty values
+            const emails = emailInput.value.split(',').map(email => email.trim()).filter(email => email);
+
+
+            function isValidEmail(email) {
+                const input = document.createElement('input');
+
+                input.type = 'email';
+                input.required = true;
+                input.value = email;
+
+                return typeof input.checkValidity === 'function' ? input.checkValidity() : /\S+@\S+\.\S+/.test(email);
+            }
+
+            // check every email from "emails" and separate valid and invalid emails into two arrays
+            const validEmails = [];
+            const invalidEmails = [];
+            emails.forEach(email => {
+                if (isValidEmail(email)) {
+                    validEmails.push(email);
+                } else {
+                    invalidEmails.push(email);
+                }
+            });
+
+
+            // Create li element for each email
+            validEmails.forEach(email => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+            <div class="person-access">
+                <span class="email">${email}</span>
+                <select class="role">
+                    <option value="viewer">Viewer</option>
+                    <option value="editor">Editor</option>
+                </select>
+                <input type="date" class="expiration-date"/>
+                <button type="button" class="remove-access">×</button>
+            </div>
+        `;
+
+                // Add click handler for remove button
+                const removeButton = li.querySelector('.remove-access');
+                removeButton.addEventListener('click', function () {
+                    li.remove();
+                });
+
+                peopleList.appendChild(li);
+            });
+
+            // Clear the input OR populate it with invalid emails
+            if (invalidEmails.length > 0) {
+                emailErrorMessage.hidden = false;
+                emailInput.value = invalidEmails.join(', ');
+            } else {
+                emailErrorMessage.hidden = true;
+                emailInput.value = '';
+            }
+        });
+
+
+
+    </script>
+
+
+</body>
+
+</html>
