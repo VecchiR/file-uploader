@@ -183,18 +183,42 @@ async function showShareItemModal(itemType, encodedItem) {
         const response = await fetch(`/storage/${itemType}/${item.id}/permissions`);
         const data = await response.json();
 
-        // Populate dialog
-        let html = `<h3>Share ${item.name}</h3>`;
 
-        //display the data and sharing controls
+        // ---------------  WIP --------------- //
+        // ---------------  WIP --------------- //
+        // ---------------  WIP --------------- //
+        // ---------------  WIP --------------- //
+        // ---------------  WIP --------------- //
+        // ---------------  WIP --------------- //
+        // ---------------  WIP --------------- //
+        let html = buildShareModalUI();
+        // ---------------  WIP --------------- //
+        // ---------------  WIP --------------- //
+        // ---------------  WIP --------------- //
+        // ---------------  WIP --------------- //
+        // ---------------  WIP --------------- //
+        // ---------------  WIP --------------- //
+        // ---------------  WIP --------------- //
 
-        html += `<form method="dialog"><button type="button" onclick="this.closest('dialog').close()">Close</button></form>`;
+
         dialog.innerHTML = html;
     } catch (err) {
         dialog.innerHTML = `<div>Error loading permissions</div>
             <form method="dialog"><button type="button" onclick="this.closest('dialog').close()">Close</button></form>`;
     }
+}
+
+function buildShareModalUI() {
 
 
+    // FIRST, build an HTML version of the share modal UI
 
+    const html = "";
+    html += `<form method="dialog"><button type="button" onclick="this.closest('dialog').close()">Close</button></form>`;
+
+    return html;
+}
+
+function alerthey() {
+    alert("Hey, this is a test alert!");
 }
