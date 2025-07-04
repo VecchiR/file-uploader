@@ -31,7 +31,25 @@
             color: #ff0000;
         }
 
-        #people_list {
+        .expiration-container {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .set-expiration {
+            padding: 4px 8px;
+            background: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .set-expiration:hover {
+            background: #e0e0e0;
+        }
+
+        #people-list {
             list-style: none;
             padding: 0;
         }
@@ -39,124 +57,143 @@
 </head>
 
 <body>
-
     <form action="">
         <h3>Share [filename]</h3>
-        <p class="email-error" hidden>Some of the emails are invalid: correct them and press "add" again!</p>
-        <input id="emailInput" type="email" multiple placeholder='email1@ex.com, email2@ex.com...' />
-        <button type="button" id="add_email">add</button>
+        <p class="email-error-message" hidden>Some of the emails are invalid: correct them and press "add" again!</p>
+        <input id="recipient-emails-input" type="email" multiple placeholder="email1@ex.com, email2@ex.com..." />
+        <button type="button" id="add-recipient-btn">Add</button>
 
-        <div>
-            <h4>People with access</h4>
-            <ul id="people_list">
-            </ul>
-        </div>
-
-        <div>
-            <h4>Public access</h4>
-            <select name="public_access" id="public_access">
-                <option value="private">Private</option>
-                <option value="anyone_with_link">Anyone with the link</option>
-            </select>
-
-            <div id="public_controls">
-                <select name="role" id="role">
-                    <option value="viewer">Viewer</option>
-                    <option value="editor">Editor</option>
-                </select>
-                <input type="date" name="expiration_date" id="expiration_date" />
+        <div class="access-delegation-container">
+            <div>
+                <h4>People with Access</h4>
+                <ul id="recipients-list">
+                </ul>
             </div>
+            <div>
+                <h4>Public Access</h4>
+                <select name="public-access-level" id="public-access-level">
+                    <option value="private">Private</option>
+                    <option value="anyone-with-link">Anyone with the link</option>
+                </select>
+                <div id="public-access-controls" hidden>
+                    <select name="public-role" id="public-role">
+                        <option value="viewer">Viewer</option>
+                        <option value="editor">Editor</option>
+                    </select>
+                    <div class="expiration-date-controls">
+                        <button type="button" class="set-expiration-btn">Set expiration date</button>
+                        <input type="date" name="public-expiration-date" id="public-expiration-date" hidden />
+                    </div>
+                </div>
+            </div>
+            <!-- if the user has JavaScript support disabled -->
+            <noscript>
+                <button type="button">Cancel</button>
+                <button type="submit">Share</button>
+            </noscript>
         </div>
-
-        <!-- if the user has JavaScript support disabled -->
-        <noscript>
-            <button type="button">Cancel</button>
-            <button type="submit">Share</button>
-        </noscript>
-
     </form>
 
     <script>
-        const emailErrorMessage = document.querySelector('.email-error');
-        const publicAccess = document.getElementById('public_access')
-        const publicControls = document.getElementById('public_controls');
-        publicControls.hidden = publicAccess.value !== 'anyone_with_link';
-
-        publicAccess.addEventListener('change', function (event) {
-            console.log(event.target.value);
-            publicControls.hidden = event.target.value !== 'anyone_with_link';
+        // Handling public access level change (show/hide controls)
+        const publicAccessLevel = document.getElementById('public-access-level');
+        const publicAccessControls = document.getElementById('public-access-controls');
+        publicAccessControls.hidden = publicAccessLevel.value !== 'anyone-with-link';
+        publicAccessLevel.addEventListener('change', function (event) {
+            publicAccessControls.hidden = event.target.value !== 'anyone-with-link';
         });
 
-        const addEmailButton = document.getElementById('add_email');
-        const peopleList = document.getElementById('people_list');
-        addEmailButton.addEventListener('click', function () {
-            const emailInput = document.querySelector('#emailInput');
+  
 
-            // Split the input by commas, trim values and then filter out empty values
-            const emails = emailInput.value.split(',').map(email => email.trim()).filter(email => email);
+        // Handle add recipient logic
+        const emailErrorMessage = document.querySelector('.email-error-message');
+        const addRecipientBtn = document.getElementById('add-recipient-btn');
+        const recipientsList = document.getElementById('recipients-list');
+        const recipientEmailsInput = document.getElementById('recipient-emails-input');
+        addRecipientBtn.addEventListener('click', function () {
+            // Allow for multiple e-mails by: splitting the input by commas, trimming spaces, and filtering out empty strings
+            const emails = recipientEmailsInput.value.split(',').map(email => email.trim()).filter(email => email);
 
-
-            function isValidEmail(email) {
-                const input = document.createElement('input');
-
-                input.type = 'email';
-                input.required = true;
-                input.value = email;
-
-                return typeof input.checkValidity === 'function' ? input.checkValidity() : /\S+@\S+\.\S+/.test(email);
+            // If there are emails, validate them and separate valid and invalid ones
+            if (emails.length === 0) {
+                emailErrorMessage.hidden = true;
+                return;
             }
-
-            // check every email from "emails" and separate valid and invalid emails into two arrays
             const validEmails = [];
             const invalidEmails = [];
             emails.forEach(email => {
-                if (isValidEmail(email)) {
+                if (isValidEmailAddress(email)) {
                     validEmails.push(email);
                 } else {
                     invalidEmails.push(email);
                 }
             });
 
-
-            // Create li element for each email
+            // Create list items for each valid email
             validEmails.forEach(email => {
                 const li = document.createElement('li');
                 li.innerHTML = `
-            <div class="person-access">
-                <span class="email">${email}</span>
-                <select class="role">
-                    <option value="viewer">Viewer</option>
-                    <option value="editor">Editor</option>
-                </select>
-                <input type="date" class="expiration-date"/>
-                <button type="button" class="remove-access">×</button>
-            </div>
-        `;
-
-                // Add click handler for remove button
-                const removeButton = li.querySelector('.remove-access');
-                removeButton.addEventListener('click', function () {
+                    <div class="person-access">
+                        <span class="email">${email}</span>
+                        <select class="role">
+                            <option value="viewer">Viewer</option>
+                            <option value="editor">Editor</option>
+                        </select>
+                        <div class="expiration-date-controls">
+                            <button type="button" class="set-expiration-btn">Set expiration date</button>
+                        </div>
+                        <button type="button" class="remove-access">×</button>
+                    </div>`;
+                const removeBtn = li.querySelector('.remove-access');
+                removeBtn.addEventListener('click', function () {
                     li.remove();
                 });
-
-                peopleList.appendChild(li);
+                recipientsList.appendChild(li);
             });
 
-            // Clear the input OR populate it with invalid emails
+            // If there are invalid emails, show the error message and populate the input field with them, otherwise hide the error message and clear the input field
             if (invalidEmails.length > 0) {
                 emailErrorMessage.hidden = false;
-                emailInput.value = invalidEmails.join(', ');
+                recipientEmailsInput.value = invalidEmails.join(', ');
             } else {
                 emailErrorMessage.hidden = true;
-                emailInput.value = '';
+                recipientEmailsInput.value = '';
+            }
+        });
+
+        // Email validation - creates a temporary input element to leverage the browser's built-in email validation, or falls back to a minimal regex check if the browser does not have that feature.
+        function isValidEmailAddress(email) {
+            const input = document.createElement('input');
+            input.type = 'email';
+            input.required = true;
+            input.value = email;
+            return typeof input.checkValidity === 'function' ? input.checkValidity() : /\S+@\S+\.\S+/.test(email);
+        }
+
+        // Event listener for "set expiration date" buttons
+        const accessDelegationContainer = document.querySelector('.access-delegation-container');
+        accessDelegationContainer.addEventListener('click', function (event) {
+            if (event.target.classList.contains('set-expiration-btn')) {
+                const btn = event.target;
+                const controls = event.target.closest('.expiration-date-controls');
+                const dateInput = controls.querySelector('input[type="date"]');
+
+                dateInput.showPicker();
+
+                dateInput.addEventListener('change', function () {
+                    if (dateInput.value) {
+                        const date = new Date(dateInput.value);
+                        btn.textContent = `Expires: ${date}`;
+                    }
+                    else {
+                        btn.textContent = 'Set expiration date';
+                    }
+                });
             }
         });
 
 
-
     </script>
-
-
 </body>
 
 </html>
